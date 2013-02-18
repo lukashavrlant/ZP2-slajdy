@@ -1,0 +1,198 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 1: Rekurzivní funkce}
+\author{Lukáš Havrlant}
+\date{12. února 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Konzultace}
+\begin{itemizex}
+\item V pracovně 5.076.
+\item Každé úterý 14.45--16.15. 
+\item Emaily:
+  \begin{itemizex}
+    \item lukas.havrlant+skola@gmail.com
+    \item lukas.havrlant@upol.cz
+  \end{itemizex}
+\item Web: \url{http://tux.inf.upol.cz/~havrlant/}
+\end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Doporučená literatura}
+\begin{itemize}
+\item Pavel Herout: Učebnice Jazyka C. Kopp, 2007.
+\item Pavel Herout: Učebnice Jazyka C, 2. díl. Kopp.
+\item Kernighan, Ritchie: Programovací jazyk C, 2006.
+\item \dots dále viz Portál
+\item + strýček Google
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Podmínky získání zápočtu}
+\begin{itemizex}
+  \item Vypracovat alespoň 8 domácích úkolů, které budou zadávány na každém cvičení. 
+  \item Vypracovat závěrečný projekt (= jeden větší domácí úkol). 
+  \item Docházka není povinná.
+\end{itemizex}
+\end{frame}
+
+\begin{frame}[t,fragile]\frametitle{Funkce: opakování} 
+\begin{minted}[linenos=true]{c} 
+void upozorni() { // Definice funkce
+    printf("Pockej, zapomnela jsi na okurku!");
+}
+
+double prumer(double a, double b) {
+    return (a + b) / 2;
+}
+prumer(2.5, 7.5); // Volani funkce, vysledek: 5.0
+
+double absolutni_hodnota(double x) {
+    if (x >= 0)  return x;
+    else         return -x;
+}
+\end{minted}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]{Rekurzivní funkce}
+\begin{itemizex}
+    \item Funkce, která ve svém těle volá sama sebe. 
+    \item Slouží k podobným účelům jako cykly.
+    \item Obsahuje limitní podmínku (jako cykly). 
+    \item Cyklus bývá většinou rychlejší. Rekurze může být přehlednější. 
+    \item Teorii znáte z Paradigmat programování. 
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Faktoriál} 
+Faktoriál se zapisuje $n!$ a definuje se, pro $n\in\mathbb{N}_0$, jako
+$$n!=1\cdot2\cdot3\cdot\ldots\cdot n,\quad \,\mbox{neboli}\quad 
+n!=
+\begin{cases}
+n\cdot(n-1)!&\mbox{pokud } n > 0\\
+1&\mbox{pokud } n = 0
+\end{cases}
+$$
+Řešení v C:
+\begin{minted}[linenos=true]{c} 
+int factorial(int n)
+{
+    if (n > 0)
+        return n * factorial(n - 1);
+    else
+        return 1;
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Průběh výpočtu} 
+Pokud zavoláme factorial(5), bude výpočet probíhat takto:
+
+\begin{minted}[linenos=true]{c} 
+factorial(5)
+5 * (factorial(4))
+5 * (4 * (factorial(3))))
+5 * (4 * (3 * (factorial(2))))
+5 * (4 * (3 * (2 * (factorial(1)))))
+5 * (4 * (3 * (2 * (1 * (factorial(0))))))
+5 * (4 * (3 * (2 * (1 * (1)))))
+5 * (4 * (3 * (2 * (1))))
+5 * (4 * (3 * (2)))
+5 * (4 * (6))
+5 * (24)
+120
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Najdi nulu v poli (cyklem)} 
+\begin{minted}[linenos=true]{c} 
+int najdi_nulu(int pole[], int delka) {
+    int i;
+    for (i = 0; i < delka; i++) {
+        if (pole[i] == 0)
+            return i;
+    }
+    return -1;
+}
+
+int main() {
+    int cisla[] = {2,3,0,5,4};
+    printf("%i\n", najdi_nulu(cisla, 5)); // 2
+}
+\end{minted}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Najdi nulu v poli (rekurzí)} 
+\begin{minted}[linenos=true]{c} 
+int najdi_nulu(int pole[], int delka, int i) {
+    if (i >= delka) { // nejsme uz za koncem pole?
+        return -1; // hmm, tak jsme nulu nenasli.
+    }
+    else {
+        if (pole[i] == 0) 
+            return i; // vratime index prvni nuly
+        else // jinak otestujeme prvek o bunku dale
+            return najdi_nulu(pole, delka, i + 1);
+    }
+}
+int main() {
+    int cisla[] = {7,3,0,5,4};
+    printf("%i\n", najdi_nulu(cisla, 5, 0)); // 2
+}
+\end{minted}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}
