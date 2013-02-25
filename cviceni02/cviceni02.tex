@@ -38,6 +38,28 @@
 \end{frame}
 
 
+\begin{frame}[t,fragile]\frametitle{Z minula: nezapomínejte na \texttt{return}} 
+\begin{itemize}
+    \item Ve Scheme jste nemuseli explicitně psát \texttt{return}, pokud jste rekurzivně volali nějakou funkci:
+\begin{minted}[linenos=true]{scheme} 
+(define factorial 
+    (lambda (x)
+        (if (= x 0) 
+            1
+            (* x (factorial (- x 1))))))
+\end{minted}
+    \item V Céčku příkaz \texttt{return} musíte uvádět!
+\begin{minted}[linenos=true]{c} 
+int factorial(int x) {
+    if (x == 0) return 1;
+    else return x * factorial(x - 1);
+}
+\end{minted}
+    \item Pokud to v C funguje bez \texttt{return}u, tak je to náhoda.
+\end{itemize}
+\end{frame}
+
+
 \begin{frame}[t,fragile]\frametitle{Jednorozměrné pole: opakování} 
   \begin{itemizex}
     \item Obecná definice:
@@ -59,7 +81,7 @@ double dane[] = {16.5, 18, 21.75};
 
 
 \begin{frame}[t,fragile]\frametitle{Jednorozměrné pole: přístup k prvkům} 
-\vskip 0.5cm
+\vskip 0.4cm
 \begin{itemizex}
     \item Pomocí operátoru \texttt{[]}
     \item Pokud chceme získat/nastavit 4. prvek pole, použijeme kód:
@@ -83,7 +105,7 @@ $$
 3&1&9
 \end{pmatrix}
 $$
-        \item Tabulka (matice) má 2 řádky a 3 sloupce, dvourozměnré pole deklarujeme takto:
+        \item Tabulka (matice) má 2 řádky a 3 sloupce, dvourozměrné pole deklarujeme takto:
 \begin{minted}[linenos=true]{c} 
 int matice[2][3];
 int s_inicializaci[2][3] = {{2, 5, 6}, {3, 1, 9}};
@@ -94,6 +116,7 @@ int s_inicializaci[2][3] = {{2, 5, 6}, {3, 1, 9}};
 
 
 \begin{frame}[t,fragile]\frametitle{Přístup k prvkům} 
+    \vskip 1cm
     \begin{itemizex}
         \item Použijeme vícekrát operátor \texttt{[]}.
 \begin{minted}[linenos=true]{c} 
@@ -155,8 +178,8 @@ $$
     \begin{itemize}
         \item Definujme: \texttt{int pole[5]; int matice[3][7];}
         \item Pak \texttt{pole} je ukazatel na první prvek pole.
-        \item \texttt{matice} je ukazatel na ukazatel na první prvek pole. 
-        \item \texttt{matice[2]} je ukazatel na třetí řádek / ukazatel na pole, které obsahuje třetí řádek / ukazatel na první prvek druhého řádku.
+        \item \texttt{matice} je adresa dvourozměrného pole. 
+        \item \texttt{matice[2]} je adresa třetího řádku / ukazatel na první prvek třetího řádku.
         \item \texttt{*(matice[2])} vrátí první prvek třetího řádku. 
     \end{itemize}
 
@@ -164,10 +187,10 @@ $$
 int pole[2][4] = {{1, 3, 5, 7}, {2, 4, 6, 8}};
 Uloženo jako:
 {1, 3, 5, 7, 2, 4, 6, 8}
-^            ^
-pole[0]      pole[1]
-^
-pole
+ ^           ^
+ pole[0]     pole[1]
+ ^
+ pole
 \end{verbatim}
 \end{frame}
 
@@ -179,7 +202,7 @@ pole
 \begin{minted}[linenos=true]{c} 
 int funkce(int matice[][5]) { ... }
 \end{minted}
-        \item Proč? Když pak napíšeme \texttt{matice[3][0]}, tak program musí vědět, kolik sloupců má jeden řádky, aby se mohl posunout o správný počet buněk v \uv{jednorozměrném poli}.
+        \item Proč? Když pak napíšeme \texttt{matice[3][0]}, tak program musí vědět, kolik sloupců má jeden řádek, aby se mohl posunout o správný počet buněk v \uv{jednorozměrném poli}.
     \end{itemizex}
 \end{frame}
 

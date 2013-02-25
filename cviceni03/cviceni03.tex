@@ -1,0 +1,185 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 2: Dynamická vícerozměrná pole}
+\author{Lukáš Havrlant}
+\date{26. února 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Dynamická vícerozměrná pole}
+    \vskip 1cm
+    \begin{itemizex}
+        \item Přístup k prvkům je stejný jako u statického vícerozměrného pole, tj. pomocí více závorek: \texttt{dynpole[0][5][q]}
+        \item Možností je více: liší se tím, kolik a jaké rozměry musíme napsat už během psaní programu.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Pole ukazatelů} 
+    \begin{itemizex}
+        \item Dvourozměrné pole můžeme vidět jako \uv{pole ukazatelů}.
+        \item Deklarace: \texttt{int* pole[]} $\rightarrow$ pole, které bude uchovávat ukazatele na \texttt{int} (v podstatě jde o pole polí).
+        \item Každý řádek může být různě dlouhý: hodí se např. na řetězce. 
+\begin{minted}[linenos=true]{c} 
+const char* texty[] = {"aaa", "bb", "c"};
+printf("%s\n", texty[0]); // aaa
+printf("%c\n", texty[1][0]); // b
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Dynamická alokace prvků pole} 
+\begin{minted}[linenos=true]{c} 
+int* pole[3]; // Musime udat pocet radku (3)
+pole[0] = (int*) malloc(sizeof(int) * 2);
+pole[1] = (int*) malloc(sizeof(int) * 4);
+pole[2] = (int*) malloc(sizeof(int) * 6);
+// Prvni radek ma dva 2 sloupce, druhy 4, treti 6
+
+pole[0][0] = 4; // V poradku
+pole[1][2] = 4; // V poradku
+pole[0][2] = 4; // Spatne! 
+pole[2][3] = 4; // V poradku
+pole[1][3] = 4; // Spatne!
+pole[1] = 4; // Spatne, pole[1] je ukazatel na int, ne int
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Dvourozměrné pole jako ukazatel na pole} 
+    \begin{itemizex}
+        \item Jde o méně používaný typ pole. 
+        \item Druhý rozměr je dán pevně, první je možné určit až v průběhu výpočtu.
+        \item Jednotlivé řádky mají stejnou délku a jsou uloženy v jednom bloku paměti za sebou.
+\begin{minted}[linenos=true]{c} 
+int (*pole)[3];
+pole = (int(*)[3])malloc(2 * 3 * sizeof(int));
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Dvourozměrné pole jako ukazatel na ukazatel} 
+    \begin{itemizex}
+        \item Nejdynamičtější varianta, oba rozměry můžete určit až v průběhu běhu programu. 
+        \item Víme, že zápisem
+    \begin{minted}[linenos=true]{c} 
+int* pole = (int*)malloc(sizeof(int) * x);
+    \end{minted}
+ve skutečnosti vytváříme pole intů o \texttt{x} prvcích. Podobný postup můžeme použít pro vytvoření dvourozměrného pole:
+\begin{minted}[linenos=true]{c} 
+int** matice = (int**)malloc(sizeof(int*) * 2);
+matice[0] = (int*)malloc(sizeof(int) * 4);
+matice[1] = (int*)malloc(sizeof(int) * 69);
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Ukazatel na ukazatel} 
+    \begin{itemizey}
+        \item Identifikátor \texttt{matice} tak můžeme opět vidět jako pole ukazatelů na int, tj. pole polí.
+        \item Kód \texttt{(int**)malloc(sizeof(int*) * 2)} alokuje místo pro dva \textbf{ukazatele} na int. Pozor: musíme alokovat místo pro \texttt{sizeof(int*)}, ne pro \texttt{sizeof(int)}.
+        \item Kód \texttt{(int*)malloc(sizeof(int) * 69)} alokuje místo pro 69 prvků typu \texttt{int}. Tj. alokuje místo pro prvky řádku.
+        \item Pomocí \texttt{matice[3]} se odkážeme na čtvrtý řádek matice. 
+        \item Pomocí \texttt{matice[3][7]} se odkážeme na čtvrtý řádek a osmý sloupec matice. 
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Podobnost s první možností} 
+    \begin{itemizex}
+        \item Ukazatel na ukazatel je dynamická verze pole ukazatelů:
+\begin{minted}[linenos=true]{c} 
+int* pole[5];
+int** dynpole = (int**)malloc(sizeof(int*) * 5);
+int i;
+for (i = 0; i < 4; i++) {
+    pole[i] = (int*)malloc(sizeof(int) * (1 + i));
+    dynpole[i] = (int*)malloc(sizeof(int) * (1 + i));
+}
+\end{minted}
+        \item Získáme stejné pole, pouze \texttt{dynpole} je dynamicky vytvořené a můžeme ho např. vracet z funkce.
+    \end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Pole řetězců podruhé} 
+    \begin{itemizex}
+        \item Můžeme dynamicky vytvořit pole řetězců:
+\begin{minted}[linenos=true]{c} 
+int x = 7, i, j;
+char** retezce = (char**)malloc(sizeof(char*) * x);
+for (i = 0; i < x; i++) {
+    retezce[i] = (char*)malloc(sizeof(char) * 4);
+    retezce[i][0] = 'a'; 
+    retezce[i][1] = 'b'; 
+    retezce[i][2] = 'c'; 
+    retezce[i][3] = '\0';
+} // V kazdem radku bude ulozeno "abc\0"
+for (i = 0; i < x; i++)
+    printf("%s\n", retezce[i]);
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Vícerozměrné pole} 
+    \begin{itemizex}
+        \item Podobnými technikami (ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na ukazatel na \texttt{typ}) můžete vytvářet i vícerozměrná pole.
+        \item Pokud potřebujete vrátit pole vícerozměrné pole vrátit jako návratovou hodnotu funkce, použijte poslední dynamickou možnost, tj. ukazatel na \dots na ukazatel na typ. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}
