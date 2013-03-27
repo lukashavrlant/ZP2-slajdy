@@ -1,0 +1,361 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 5: Práce s preprocesorem}
+\author{Lukáš Havrlant}
+\date{12. března 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{K čemu slouží preprocesor} 
+    \begin{itemizex}
+        \item Zpracovává zdrojový text ještě před překladačem.
+        \item Provádí v podstatě jednoduché search\&replace.
+        \item Řádky určené preprocessoru začínají znakem \#, za kterým není mezera. Příklad:
+\begin{minted}[linenos=true]{c} 
+#define PI 3.1415
+\end{minted}
+        \item Definujeme konstantu \texttt{PI} -- všechny výskyty slova \texttt{PI} budou nahrazeny za \texttt{3.1415}.
+        \item Konstanty obvykle zapisujeme velkými písmeny. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Složitější příklady} 
+    \begin{itemizex}
+        \item Můžeme definovat i složitější konstanty:
+\begin{minted}[linenos=true]{c} 
+#define MY_FOR for(i = 0; i < delka; i++)
+
+int i, delka = 5, cisla[] = {2, 4, 6, 8, 10};
+MY_FOR {
+    printf("%i\n", cisla[i]);
+}
+\end{minted}
+        \item \dots něco takového je ale lepší nepoužívat, protože není na první pohled jasné, co \texttt{MY\_FOR} je. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Přepsání konstanty} 
+\begin{minted}[linenos=true]{c} 
+#define PI 3.14
+#define PI 3.14159265359
+printf("%g\n", PI);
+// warning: "PI" redefined
+\end{minted}
+
+Musíme nejprve starou konstantu zrušit pomocí \texttt{\#undef}:
+
+\begin{minted}[linenos=true]{c} 
+#define PI 3.14
+#undef PI
+#define PI 3.14159265359
+printf("%g\n", PI);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Dlouhá konstanta} 
+Pokud se nějaká konstanta nevleze na jeden řádek, lze rozdělit na více řádků pomocí znaku zpětného lomítka na konci řádku
+\begin{minted}[linenos=true]{c} 
+#define DLOUHA_KONSTANTA 12345678.12345\
+67890123456
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Makra s parametry} 
+    \begin{itemize}
+        \item Z paradigmat programování znáte makra -- C nabízí něco trochu podobného. 
+        \item Konstantu cyklu bychom mohli parametrizovat takto:
+\begin{minted}[linenos=true]{c} 
+#define myfor(delka) for(i = 0; i < delka; i++)
+int i, n = 4, cisla[] = {2, 4, 6, 8, 10};
+myfor(n + 1) {
+    printf("%i\n", cisla[i]);
+}
+
+// Makro se "prepise" na:
+for(i = 0; i < n + 1; i++) {
+    printf("%i\n", cisla[i]);
+}
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Obecná syntaxe maker} 
+\begin{itemizex}
+    \item Obecná syntaxe maker bez parametrů (konstant):
+\begin{minted}[linenos=true]{c} 
+#defince jmeno hodnota
+\end{minted}
+    \item Obecná syntaxe maker s parametry:
+    \begin{minted}[linenos=true]{c} 
+#define jmeno(arg_1, ..., arg_N) telo_makra
+    \end{minted}
+    \item Za jménem makra, pokud má parametry, nesmí být mezera. 
+\end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Hodnota vs. text} 
+Zatímco u funkcí se vždy předala až výsledná hodnota, u maker se předává pouze samotný text. 
+\begin{minted}[linenos=true]{c} 
+#define soucet(a, b) a + b
+int vysledek = soucet(3, 7 + 8);
+printf("%i\n", vysledek); // 18
+
+// makro se rozepise na
+int vysledek = 3 + 7 + 8;
+
+// nerozepise se na 
+int vysledek = 3 + 15; // NE!!!
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Problémy s makry: priorita} 
+Problém s prioritou ilustrujeme na makru pro součin:
+
+\begin{minted}[linenos=true]{c} 
+#define soucin(a, b) a * b
+int vysledek = soucin(2 + 3, 5 + 5);
+printf("%i\n", vysledek); // 22
+
+// prepise se na
+int vysledek = 2 + 3 * 5 + 5;
+
+// reseni: zavorky kolem argumentu a kolem celeho makra:
+#define soucin(a, b) ((a) * (b))
+// prepsalo by se na
+int vysledek = ((2 + 3) * (5 + 5));
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Problémy s makry: dvojí vyhodnocení}
+Pokud používáme v makru jednu proměnnou dvakrát, může se stát, že ji dvakrát vyhodnotíme:
+
+\begin{minted}[linenos=true]{c} 
+#define nadruhou(x) ((x) * (x))
+int i = 1;
+nadruhou(++i);
+
+// Prepise se na 
+((++i) * (++i));
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak se řeší problém dvojího vyhodnocení} 
+    \begin{itemizey}
+        \item Problém dvojího vyhodnocení se řeší špatně. 
+        \item Můžeme argument vyhodnotit jednou a uložit do pomocné proměnné.
+        \item Narazíme na další problém: abychom mohli uložit výsledek do pomocné proměnné, potřebujeme znát typ původní proměnné:
+\begin{minted}[linenos=true]{c} 
+#define nadruhou(x) ({int temp = x; temp * temp; })
+\end{minted}
+        \item Nebude fungovat, pokud předáme \texttt{double}.
+        \item Museli bychom typ předat jako argument. 
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Rozšíření GCC: příkaz \texttt{typeof}} 
+    \begin{itemizex}
+        \item Překladač \texttt{GCC} nabízí příkaz \texttt{typeof}. 
+        \item Vrací typ dané proměnné. 
+\begin{minted}[linenos=true]{c} 
+int a;
+typeof(a) b; // promenna b je typu int
+\end{minted}
+        \item Toho můžeme využít v našem makru:
+\begin{minted}[linenos=true]{c} 
+#define nadruhou(x) ({typeof(x) t = x; t * t; })
+printf("%i\n", nadruhou(8)); // 64
+printf("%g\n", nadruhou(8.5)); // 72.25
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak skutečně vyřešit problém dvojího vyhodnocení} 
+Použít funkci.
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Podmíněný překlad} 
+Pomocí příkazů \texttt{\#if}, \texttt{\#else}, \texttt{\#elif} a \texttt{\#endif} můžeme řídit překlad. Za příkazem \texttt{\#if} musí být nějaký konstantní výraz:
+\begin{minted}[linenos=true]{c} 
+#define MAC_OS_X 1
+
+#if MAC_OS_X
+printf("Steve Jobs");
+#else
+syntakticka chyba
+#endif
+\end{minted}
+
+Všimněte si, že v \texttt{else} části jsme dokonce udělali syntaktickou chybu -- překladač se k ní ale nedostal. 
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Podmíněný překlad řízený definicí makra} 
+Často se používá kratší forma, která jen testuje, zda makro existuje:
+
+\begin{minted}[linenos=true]{c} 
+#define WINDOWS
+#ifdef WINDOWS
+   #define JMENO "C:\\Data\\input.txt"
+#else
+   #define JMENO "/data/input.txt"
+#endif
+\end{minted}
+
+K dispozici je i obrácená varianta \texttt{\#ifndef}, která zjišťuje, zda konstanta není definovaná.
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Kdy použít makra: krátké funkce} 
+    \begin{itemizex}
+        \item Místo příliš jednoduchých funkcí, protože samotné porovnání se provede rychle, ale volání funkce je drahé.
+        \item Nevýhody jsou v zásadě tři:
+        \begin{enumerate}
+            \item Nemůžeme používat rekurzi.
+            \item Roste velikost programu. 
+            \item Snadno makro napíšeme špatně, např. problém dvojího vyhodnocení.
+        \end{enumerate}
+        \item Můžeme využít i líného vyhodnocování:
+        \begin{minted}[linenos=true]{c} 
+#define IMPLIES(x, y) (!(x) || (y))
+        \end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Kdy použít makra: Složitější konstrukce} 
+\begin{itemizex}
+    \item V C++ se občas můžeme setkat s makrem \texttt{foreach}, které umožňuje jednoduše iterovat přes kolekce. Ukázka:
+\begin{minted}[linenos=true]{c} 
+BOOST_FOREACH(char c, "Hello, world!") {
+    printf("%c\n", c)
+}
+\end{minted}
+\end{itemizex}
+
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Jak psát složitější makra} 
+\begin{itemizex}
+    \item Problém s psaním složitějších maker je, že nemůžeme napsat něco takového:
+\begin{minted}[linenos=true]{c} 
+#define SWAP(x, y, T) \
+T tmp = (x); (x) = (y); (y) = tmp;
+int a = 5, b = 10;
+if (1)
+    SWAP(a, b, int);
+else
+    printf("\n");
+\end{minted}
+\end{itemizex}
+\end{frame}
+
+\begin{frame}[t,fragile]\frametitle{Opakování: operátor čárka} 
+    \begin{itemizex}
+        \item Příklad zápisu:
+\begin{minted}[linenos=true]{c} 
+vyraz_1, vyraz_2
+\end{minted}
+        \item Nejprve se vyhodnotí první výraz, \textbf{poté} druhý výraz. 
+        \item Výsledkem vyhodnocení sekvenčního výrazu je vyhodnocení posledního výrazu.
+\begin{minted}[linenos=true]{c} 
+int cislo = (5 + 6, 40 + 2, 100 + 100);
+printf("%i\n", cislo); // 200
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Když nestačí operátor čárka} 
+    \begin{itemizex}
+        \item Pokud nestačí operátor čárka a potřebujete napsat ještě složitější makro, použijte trik s \texttt{do ... while(0)}:
+
+
+\begin{minted}[linenos=true]{c} 
+#define SWAP(x, y, T) do\
+{ T tmp = (x); (x) = (y); (y) = tmp; } while(0)
+
+int a = 5, b = 10;
+SWAP(a, b, int);
+printf("%i\n", a); // 10
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Když nestačí operátor čárka a máte GCC} 
+    \begin{itemizex}
+        \item Překladač GCC nabízí ještě jednu možnost, jak napsat složitější výraz.
+        \item Použijeme klasický blok \texttt{\{vyraz1; vyraz2; \}} a ještě ho navíc obalíme kulatými závorkami: \texttt{(blok)}.
+        \begin{minted}[linenos=true]{c} 
+#define nadruhou(x) ({typeof(x) t = x; t * t; })
+
+#define SWAP(x, y, T) \
+({ T tmp = (x); (x) = (y); (y) = tmp; })
+        \end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

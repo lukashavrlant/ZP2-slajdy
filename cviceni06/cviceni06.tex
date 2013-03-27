@@ -1,0 +1,228 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 6: Funkce s proměnným počtem parametrů}
+\author{Lukáš Havrlant}
+\date{19. března 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Makro \texttt{assert}} 
+    \begin{itemize}
+        \item Typicky slouží k testování, zda funkce vrátila správný výsledek. Nachází se v knihovně \texttt{assert.h}
+\begin{minted}[linenos=true]{c} 
+void assert (int vyraz);
+\end{minted}
+        \item Pokud je \texttt{vyraz} nenulový, makro nic neudělá; pokud je \texttt{vyraz} roven nule, makro ukončí běh programu a vypíše chybu.
+\begin{minted}[linenos=true]{c} 
+int soucet(int a, int b) { return a + b; }
+assert(2 == soucet(-3, 5)); // nic
+assert(0 == soucet(-3, 3)); // nic
+// Assertion failed: (1 == soucet(-3, 3))
+assert(1 == soucet(-3, 3));
+assert(1); // nic
+assert(0); // Assertion failed: (0)
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{printf}} 
+    \begin{itemizex}
+        \item Zatím jsme definovali funkce, které měly přesný počet parametrů:
+\begin{minted}[linenos=true]{c} 
+int soucet(int a, int b) { return a + b; }
+\end{minted}
+        \item Funkce součet má dva parametry, oba typu \texttt{int}.
+        \item Funkce \texttt{printf} se ale chová jinak:
+\begin{minted}[linenos=true]{c} 
+printf("%i, %g, %c", 45, 2.45, 'a'); // 4 parametry
+printf("Ahoj Svete%c", '!'); // 2 parametry
+\end{minted}
+        \item Má různý počet parametrů. 
+    \end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Jak definovat FPPP} 
+    \begin{itemizex}
+        \item (FPPP = Funkce s proměnným počtem parametrů)
+        \item K definici používáme tři tečky: \texttt{...}
+        \item Funkce \texttt{printf} by mohla mít tuto deklaraci:
+\begin{minted}[linenos=true]{c} 
+int printf(const char* format, ...);
+\end{minted}
+        \item Parametr \texttt{format} představuje formátovací řetězec (tj. \texttt{"\%i, \%g, \%c"}), tři tečky značí, že dále můžeme použít libovolný počet parametrů. 
+    \end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Jak definovat FPPP podruhé} 
+    \begin{itemizex}
+        \item FPPP může mít i běžné \uv{pevné} parametry. 
+        \item FPPP musí mít alespoň jeden \uv{pevný} parametr. 
+        \item Deklarace funkce \texttt{suma} pro součet proměnlivého počtu čísel a následné volání by mohlo vypadat takto:
+\begin{minted}[linenos=true]{c} 
+int suma(int pocet, ...) { /* implementace */ }
+int a = suma(4, 8, 9, 14, 57);
+\end{minted}
+        \item Toto nelze:
+\begin{minted}[linenos=true]{c} 
+int suma(...) { /* implementace */ } // Ne! 
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak pracovat s FPPP} 
+    \begin{itemizex}
+        \item V knihovně \texttt{stdarg.h} jsou definována makra pro práci s parametry: \texttt{va\_list}, \texttt{va\_start}, \texttt{va\_arg}, \texttt{va\_end}.
+        \item \texttt{va\_list} je datový typ pro uložení odkazu na parametry. 
+        \item \texttt{va\_start} inicializuje proměnnou \texttt{va\_list}.
+        \item \texttt{va\_arg} čte další parametr. 
+        \item \texttt{va\_end} ukončuje práci s parametry. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Postup} 
+    \begin{itemizex}
+        \item Deklarujeme funkci \texttt{suma} s třemi tečkami a proměnnou typu \texttt{va\_list}.
+        \item Inicializujeme proměnnou \texttt{parametry} pomocí makra \texttt{va\_start}, kde první parametr je proměnná \texttt{va\_list} a druhý parametr je poslední pevný parametr funkce \texttt{suma}.
+    \end{itemizex}
+\begin{minted}[linenos=true]{c} 
+int suma(int pocet, ...) {
+    int soucet = 0, i;
+    va_list parametry;
+    va_start(parametry, pocet);
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Čtení parametrů} 
+    \begin{itemize}
+        \item Parametry čteme pomocí makra \texttt{va\_arg}. Ten má dva parametry: první je opět proměnná typu \texttt{va\_list} a druhým je typ, který má makro přečíst a vrátit.
+        \item Makro \texttt{va\_arg} s každým zavoláním vrací další předaný parametr:
+\begin{minted}[linenos=true]{c} 
+int suma(int pocet, ...) {
+    int soucet = 0, i;
+    va_list parametry;
+    va_start(parametry, pocet);
+    printf("%i\n", va_arg(parametry, int)); // 10
+    printf("%i\n", va_arg(parametry, int)); // 20
+    printf("%i\n", pocet); // 3
+}
+suma(3, 10, 20, 30);
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Pozor na typy} 
+My může FPPP zavolat s parametry libovolných typů. Funkce sama si to musí ošetřit.
+
+\begin{minted}[linenos=true]{c} 
+int suma(int pocet, ...) {
+    int soucet = 0, i;
+    va_list parametry;
+    va_start(parametry, pocet);
+    printf("%i\n", va_arg(parametry, int)); // 1356254312
+    printf("%i\n", va_arg(parametry, int)); // 1402166392
+    printf("%i\n", pocet); // 3
+}
+suma(3, 2.2, 3.3, 4);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Ukončení práce s parametry} 
+Na konci práce s parametry zavoláme makro \texttt{va\_end}, které bere jeden parametr typu \texttt{va\_list}.
+
+\begin{minted}[linenos=true]{c} 
+int suma(int pocet, ...) {
+    int soucet = 0, i;
+    va_list parametry;
+    va_start(parametry, pocet);
+    /* secteni parametru */
+    va_end(parametry);
+    return soucet;
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak poznáme, kolik parametrů jsme předali} 
+    \begin{itemize}
+        \item Nijak.
+        \item Funkce musí mít v parametru počet předaných parametrů,
+\begin{minted}[linenos=true]{c} 
+for (i = 0; i < pocet; i++) {
+    temp = va_arg(parametry, long double);
+    /* zpracuj */
+}
+\end{minted}
+        \item nebo musí být parametry něčím ukončeny (podobně jako je řetězec ukončen nulou).
+\begin{minted}[linenos=true]{c} 
+while(1) {
+    temp = va_arg(parametry, int);
+    if (temp != 0) {
+        /* zpracuj */
+    }
+}
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

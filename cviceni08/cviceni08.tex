@@ -1,0 +1,393 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 8: Práce s textovými soubory}
+\author{Lukáš Havrlant}
+\date{2. dubna 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Otevření souboru} 
+    \begin{itemizex}
+        \item Všechny potřebné funkce jsou v knihovně \texttt{stdio.h}
+        \item K otevření souboru slouží funkce \texttt{fopen}:
+\begin{minted}[linenos=true]{c} 
+FILE *fopen(const char* path, const char* mode);
+\end{minted}
+        \item Funkce vrací ukazatel na strukturu \texttt{FILE} -- ukazatel na \uv{datový proud}, anglicky \uv{stream}.
+        \item Pokud otevření selže, funkce vrací \texttt{NULL}.
+        \item Parametr \texttt{path} je cesta k souboru.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Mód} 
+Musíme specifikovat, co chceme se souborem dělat: jestli chceme číst, přepisovat nebo zapisovat na konec souboru. 
+
+\begin{tabular}{cl}
+\texttt{"r"} & otevře soubor pro čtení\\
+\texttt{"w"} & vytvoří nový soubor pro zápis (pokud soubor existuje, smaže ho)\\
+\texttt{"a"} & otevře soubor pro zápis na konec souboru\\
+\end{tabular}
+
+Dále vždy existují varianty s pluskem: \texttt{r+}, \texttt{w+}, \texttt{a+}, které otevírají soubor jak pro čtení, tak pro zápis. 
+
+\begin{minted}[linenos=true]{c} 
+fopen("seznam.txt", "r"); // otevre soubor pro cteni
+// pokud soubor existuje, smaze jeho obsah
+// a otevre ho jak pro cteni, tak pro zapis
+fopen("seznam.txt", "w+"); 
+// otevre soubor pro zapis, nesmaze obsah
+// a zapisovat bude na konec souboru
+fopen("seznam.txt", "a"); 
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Textový vs. binární režim} 
+    \begin{itemizex}
+        \item Ke všem předchozím módům ještě můžeme přidat \texttt{t} nebo \texttt{b}. Mód \texttt{t} značí textový mód, mód \texttt{b} je binární. 
+        \item Výchozí je textový.
+        \item Příklady:
+\begin{minted}[linenos=true]{c} 
+// otevre soubor pro cteni v textovem modu
+fopen("seznam.txt", "rt");
+
+// otevre soubor pro cteni a zapis v binarnim modu
+fopen("seznam.dat", "r+b");
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Čtení z textového souboru} 
+    \begin{itemizex}
+        \item Ke čtení jednoho znaku slouží funkce \texttt{getc}:
+\begin{minted}[linenos=true]{c} 
+int getc(FILE* soubor);
+\end{minted}
+        \item Předpokládejme, že \texttt{soubor.txt} obsahuje:
+\begin{minted}[linenos=true]{bash} 
+Prvni radek,
+druhy radek.
+\end{minted}
+
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "r");
+printf("%c\n", getc(soubor)); // P
+printf("%c\n", getc(soubor)); // r
+printf("%c\n", getc(soubor)); // v
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Čtení jednoho řádku} 
+    \begin{itemizex}
+        \item Slouží k tomu funkce \texttt{fgets}
+\begin{minted}[linenos=true]{c} 
+char* fgets(char* radek, int max, FILE* soubor);
+\end{minted}
+        \item Funkce \texttt{fgets} načte ze souboru jeden řádek (včetně \texttt{'\textbackslash n'} znaku) a tyto znaky uloží do parametru \texttt{radek}. 
+        \item Parametr \texttt{radek} už musí mít alokovanou paměť.
+        \item \texttt{fgets} načte maximálně \texttt{max - 1} znaků, je-li řádek delší, nenačte ho celý. (-1 proto, že na konci musí ještě uložit \texttt{'\textbackslash0'})
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad čtení ze souboru} 
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "r");
+char* radek = (char*) malloc(50 * sizeof(char));
+fgets(radek, 50, soubor);
+printf("%s\n", radek); // Prvni radek,(+ novy radek)
+fgets(radek, 5, soubor);
+printf("%s\n", radek); // druh
+\end{minted}
+
+
+\begin{itemizex}
+    \item Všimněte si, že druhý \texttt{fgets} nezačal číst od začátku souboru, ale pokračoval tam, kde první \texttt{fgets} skončil. 
+    \item Druhý \texttt{fgets} také přečetl pouze 4 znaky, 5. použil na uložení ukončovací nuly. 
+\end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Formátované čtení} 
+    \begin{itemizex}
+        \item Funkce \texttt{fscanf}, obdoba funkce \texttt{scanf}, kterou známe. 
+\begin{minted}[linenos=true]{c} 
+int fscanf(FILE *soubor, const char* format, ...);
+\end{minted}
+        \item Pro soubor obsahující řádek \texttt{10 3.14!} bychom dostali:
+\begin{minted}[linenos=true]{c} 
+int x;
+double des;
+char ch;
+FILE* soubor = fopen("soubor.txt", "r");
+fscanf(soubor, "%i %lf%c", &x, &des, &ch);
+printf("%i, %g, %c\n", x, des, ch); // 10, 3.14, !
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak poznat konec souboru} 
+    \begin{itemizex}
+        \item Pokud jsme již narazili na konec souboru, vrací funkce \texttt{getc} a \texttt{fscanf} konstantu \texttt{EOF} (\uv{End of file}).
+        \item Funkce \texttt{fgets} vrací \texttt{NULL}.
+\begin{minted}[linenos=true]{c} 
+char znak;
+FILE* soubor = fopen("soubor.txt", "r");
+while((znak = getc(soubor)) != EOF) {
+    printf("%c\n", znak);
+}
+// program vypise kazdy znak souboru 
+// na samostatny radek a skonci
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Navrácení znaku do proudu} 
+    \begin{itemizey}
+        \item Častým požadavkem je: \uv{čti znaky, dokud nenarazíš na číslici}. Což ale znamená, že se zarazíme až ve chvíli, kdy nějakou číslici přečteme.
+        \item Pokud čteme soubor s obsahem \texttt{abcdef123456}, zůstane nám ve zbytku proudu obsah \texttt{23456}.
+        \item Funkce \texttt{ungetc} vrací znak do proudu. 
+\begin{minted}[linenos=true]{c} 
+int ungetc(int znak, FILE* soubor);
+// pouziti:
+if (je_cislice(nacteny_znak)) {
+    ungetc(nacteny_znak, soubor);
+}
+\end{minted}
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Zápis do textového souboru} 
+    \begin{itemizex}
+        \item Používáme obdobné funkce jako při čtení.
+        \item Funkce \texttt{puts} slouží k zápisu jednoho znaku.
+\begin{minted}[linenos=true]{c} 
+int putc(int znak, FILE* soubor);
+\end{minted}
+
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "w");
+putc('4', soubor);
+putc('2', soubor);
+\end{minted}
+        \item Tímto přepíšeme obsah souboru \texttt{soubor.txt} na obsah \texttt{"42"}.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Zápis do textového souboru v "a" módu} 
+    \begin{itemizex}
+        \item Zapisovat můžeme i za konec souboru:
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "a");
+putc('4', soubor);
+putc('2', soubor);
+\end{minted}
+        \item Obsah souboru by se změnil takto:
+\begin{minted}[linenos=true]{bash} 
+Prvni radek,
+druhy radek.42
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Zápis textového řetězce} 
+    \begin{itemizex}
+        \item Funkce \texttt{fputs}:
+\begin{minted}[linenos=true]{c} 
+int fputs(const char* retezec, FILE* soubor);
+\end{minted}
+        \item Zapíše do souboru celý řetězec vyjma ukončovací nuly.
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "w");
+fputs("ahoj", soubor);
+fputs(" svete", soubor);
+// Obsah souboru bude:
+// ahoj svete
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Formátovaný zápis} 
+    \begin{itemizex}
+        \item Funkce \texttt{fprintf}:
+\begin{minted}[linenos=true]{c} 
+int fprintf(FILE* soubor, const char* format, ...);
+\end{minted}
+        \item V podstatě stejné jako funkce \texttt{printf}, akorát se zapisuje do souboru.
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "w");
+fprintf(soubor, "%i -- %g", 12, 3.0 / 7);
+// Obsah souboru bude:
+// 12 -- 0.428
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Uzavření souboru} 
+    \begin{itemize}
+        \item \textbf{Po ukončení práce se souborem vždy musíme soubor uzavřít pomocí funkce \texttt{fclose}:} 
+\begin{minted}[linenos=true]{c} 
+int fclose(FILE* soubor);
+\end{minted}
+        \item Proč uzavírat? 
+            \begin{itemize}
+                \item Aby se skutečně zapsal obsah na disk. Data se po použití zapisovacích funkcí ukládají do mezipaměti, zápis na disk je drahá záležitost, proto se to OS snaží optimalizovat.
+                \item Mohou existovat limity na počet otevřených souborů pro jeden program.
+                \item Jiný program může chtít zapisovat do stejného souboru.
+            \end{itemize}
+    \end{itemize}
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "w");
+// zapis, cteni, cokoliv... 
+fclose(soubor);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Vynucení zápisu bez uzavření souboru} 
+    \begin{itemizex}
+        \item Pokud chceme vynutit uložení dat z mezipaměti na disk, můžeme použít funkci \texttt{fflush}:
+\begin{minted}[linenos=true]{c} 
+int fflush (FILE* soubor);
+\end{minted}
+
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "w");
+fprintf(soubor, "%i -- %g", 12, 3.0 / 7);
+fflush(soubor);
+fputs("dalsi zapis", soubor);
+fclose(soubor);
+\end{minted}
+        \item \texttt{fflush} ve skutečnosti nevynucuje zápis na disk, vynucuje jen uvolnění mezipaměti. Data ale mohou skončit v další mezipaměti. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Odchytávání chyb} 
+    \begin{itemizex}
+        \item Tohle je noční můra a zlý sen dohromady. 
+        \item Jakákoliv práce s diskem může selhat. Soubor nemusí existovat, program nemusí mít práva daný soubor otevřít, disk může být plný\dots
+        \item Po každém volání některé z funkcí bychom tak měli otestovat, zda vše proběhlo v pořádku. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Pokud dojde k chybě} 
+    \begin{itemizex}
+        \item Funkce \texttt{putc}, \texttt{fputs}, \texttt{getc}, \texttt{fscanf}, \texttt{fclose} a \texttt{ungetc} vrací při chybě \texttt{EOF}.
+        \item Funkce \texttt{fgets}, \texttt{fopen} vrací \texttt{NULL}.
+        \item Takže kód by měl vypadat nějak takto: (na dalším slajdu)
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Kód s ošetřením chyb} 
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "r");
+if (soubor != NULL) {
+    if (putc('!', soubor) == EOF) {
+        // osetreni chyby
+    }
+    if (fclose(soubor) == EOF) {
+        // osetreni chyby
+    }
+} else {
+    // osetreni chyby
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Typ chyby} 
+    \begin{itemizex}
+        \item \dots a to ještě v předchozím kódu nijak nezjišťujeme, jaká chyba vlastně nastala. 
+        \item V knihovně \texttt{errno.h} existuje globální proměnná \texttt{errno}, ve které je uloženo číslo chyby. 
+        \item Funkce \texttt{perror} dokáže vypsat chybovou hlášku. 
+\begin{minted}[linenos=true]{c} 
+void perror(const char* s);
+\end{minted}
+        \item Řetězec, který bere jako parametr, vypíše před chybovou hláškou. (příklad na dalším slajdu)
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad s výpisem typu chyby} 
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("neexistujici_soubor", "r");
+if (soubor != NULL) {
+    // udelej neco se souborem...
+} else {
+    perror("Chyba");
+    printf("ID chyby: %i\n", errno);
+    switch (errno) {
+        case // a jedeme
+    }
+}
+// Vystupem bude:
+// Chyba: No such file or directory
+// ID chyby: 2
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

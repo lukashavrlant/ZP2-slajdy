@@ -85,17 +85,17 @@ pole[1] = 4; // Spatne, pole[1] je ukazatel na int, ne int
 \end{frame}
 
 
-\begin{frame}[t,fragile]\frametitle{Dvourozměrné pole jako ukazatel na pole} 
-    \begin{itemizex}
-        \item Jde o méně používaný typ pole. 
-        \item Druhý rozměr je dán pevně, první je možné určit až v průběhu výpočtu.
-        \item Jednotlivé řádky mají stejnou délku a jsou uloženy v jednom bloku paměti za sebou.
-\begin{minted}[linenos=true]{c} 
-int (*pole)[3];
-pole = (int(*)[3])malloc(2 * 3 * sizeof(int));
-\end{minted}
-    \end{itemizex}
-\end{frame}
+% \begin{frame}[t,fragile]\frametitle{Dvourozměrné pole jako ukazatel na pole} 
+%     \begin{itemizex}
+%         \item Jde o méně používaný typ pole. 
+%         \item Druhý rozměr je dán pevně, první je možné určit až v průběhu výpočtu.
+%         \item Jednotlivé řádky mají stejnou délku a jsou uloženy v jednom bloku paměti za sebou.
+% \begin{minted}[linenos=true]{c} 
+% int (*pole)[3];
+% pole = (int(*)[3])malloc(2 * 3 * sizeof(int));
+% \end{minted}
+%     \end{itemizex}
+% \end{frame}
 
 
 \begin{frame}[t,fragile]\frametitle{Dvourozměrné pole jako ukazatel na ukazatel} 

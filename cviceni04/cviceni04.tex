@@ -1,0 +1,200 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 4: Ukazatele na funkce}
+\author{Lukáš Havrlant}
+\date{5. března 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce vyššího řádu ve Scheme} 
+    \begin{itemizex}
+        \item Funkce vyššího řádu: funkce, která bere jako parametr funkci nebo vrací funkci.
+        \item Typickými příklady jsou funkce \texttt{map} a \texttt{filter}:
+\begin{minted}[linenos=true]{scheme} 
+> (map (lambda (x) (* x x)) '(1 2 3 4 5 6))
+(1 4 9 16 25 36)
+> (filter (lambda (x) ( > x 3)) '(1 2 3 4 5 6))
+(4 5 6)
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce vyššího řádu v C} 
+    \begin{itemizex}
+        \item Identifikátor funkce = ukazatel na funkci. 
+        \item Můžeme tak předat ukazatel na funkci.
+        \item Problém: C je staticky typovaný jazyk, potřebujeme v deklaraci uvádět návratový typ a typy parametrů. 
+        \item Výsledkem je ne zrovna čitelná deklarace (pozor na závorky kolem identifikátoru):
+\begin{minted}[linenos=true]{c} 
+int (*funkce)(int, int); // ukazatel na funkci
+int *funkce(int, int);   // deklarace funkce, ktera
+                         // vraci ukazatel na int
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Obecná deklarace} 
+    \begin{itemizey}
+        \item Obecná deklarace ukazatele na funkci má tvar:
+\begin{minted}[linenos=true]{c} 
+navratovy_typ (*nazev)(typ1, typ2, ..., typn);
+\end{minted}
+        \item \texttt{navratovy\_typ} je návratový typ funkce
+        \item \texttt{nazev} je název proměnné, do které budeme funkci ukládat.
+        \item \texttt{typ1} a další jsou typy parametrů funkce, pokud funkce nějaké parametry má. 
+        \item \texttt{double (*fun)(char*, int)} by tak byla deklarace ukazatele na funkci, která vrací typ \texttt{double} a bere dva parametry: první typu \texttt{char*} a druhý typu \texttt{int}. \texttt{fun} je identifikátor. 
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad} 
+\begin{minted}[linenos=true]{c} 
+int soucet(int x, int y) {
+    return x + y;
+}
+int soucin(int x, int y) {
+    return x * y;
+}
+int main() {
+    // promenna "funkce" je ukazatelem na fci, ktera 
+    // vraci int a bere dva parametry, oba typu int
+    int (*funkce)(int, int) = soucet;
+    printf("%i\n", funkce(10, 20));   // 30
+    funkce = soucin;
+    printf("%i\n", funkce(10, 20));   // 200
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Předání funkce v parametru funkce} 
+    \begin{itemizex}
+        \item Stačí správně deklarovat ukazatel na funkci: 
+\begin{minted}[linenos=true]{c} 
+int male_pismeno(char znak) {
+    return znak >= 'a' && znak <= 'z';
+}
+//pokud 0. znak splnuje podminku, pak se ret vypise
+void vypis(int (*podminka)(char), const char* ret) {
+    if (podminka(ret[0])) {
+        printf("%s\n", ret);
+    }
+}
+int main() {
+    vypis(male_pismeno, "ahoj");    // vypise "ahoj"
+    vypis(male_pismeno, "LuSteLa"); // nic nevypise
+}
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Použít \texttt{typedef}} 
+    \begin{itemizey}
+        \item Konstrukce \texttt{typedef} nám umožňuje vytvářet aliasy pro typy. Opakování:
+\begin{minted}[linenos=true]{c} 
+typedef int cislo; // vytvorime alias pro typ int
+cislo x = 15;      // muzeme 
+\end{minted}
+        \item Můžeme tak vytvořit alias pro ukazatel na funkci daného typu:
+\begin{minted}[linenos=true]{c} 
+typedef int (*PODM)(char);
+
+void vypis_pokud(PODM podminka, const char* ret) {
+    if (podminka(ret[0])) {
+        printf("%s\n", ret);
+    }
+}
+\end{minted}
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Pole funkcí} 
+    \begin{itemizex}
+        \item Aby deklarace nebyly málo nepřehledné, můžeme ještě vytvářet pole funkcí. 
+\begin{minted}[linenos=true]{c} 
+int soucet(int x, int y) {
+    return x + y;
+}
+int soucin(int x, int y) {
+    return x * y;
+}
+int main() {
+    // deklarujeme pole, ktere obsahuje dve funkce
+    int (*pole_funkci[2])(int, int); 
+    pole_funkci[0] = soucet;
+    pole_funkci[1] = soucin;
+}
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Pole funkcí: volání funkce} 
+    \begin{itemizex}
+        \item Pokud máme pole funkcí \texttt{pole}, pak funkci na \texttt{i}-tém indexu voláme jednoduše jako \texttt{pole[i](...)}
+\begin{minted}[linenos=true]{c} 
+int main() {
+    int (*funkce[2])(int, int);
+    funkce[0] = soucet;
+    funkce[1] = soucin;
+    printf("%i\n", funkce[0](2, 8)); // 10
+    printf("%i\n", funkce[1](2, 8)); // 16
+}
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}
