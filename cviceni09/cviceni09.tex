@@ -1,0 +1,305 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 8: Práce s binárními soubory}
+\author{Lukáš Havrlant}
+\date{9. dubna 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Textový vs. binární soubor} 
+    \begin{itemizex}
+        \item V binárních souborech jsou data zapsána ve stejné podobě, jako jsou v paměti.
+        \item Číslo typu \texttt{int} 123456 v textovém souboru: 6 znaků, "123456"
+        \item V binárním: 11110001001000000, velikost 4 bajty (pokud byl \texttt{int} 4bajtový)
+        \item Při otevírání binárních souborů používáme navíc v módu \texttt{b}.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Výhody a nevýhody binárních souborů} 
+    \begin{itemizex}
+        \item Binární soubory typicky zabírají méně místa než nekomprimovaný textový soubor.
+        \item Práce s binárními soubory je rychlejší: např. nepotřebujeme znaky "123456" převádět na číslo.
+        \item \dots ale ne vždy jsou přenositelné na jiný počítač kvůli různě velkým typům.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Zápis binárních dat} 
+    \begin{itemizey}
+        \item Funkce pro zápis dat:
+\begin{minted}[linenos=true]{c} 
+size_t fwrite(void* odkud, size_t rozmer, 
+                size_t pocet, FILE* soubor);
+\end{minted}
+        \item \texttt{odkud} je adresa začátku dat, která chceme zapsat. 
+        \item \texttt{rozmer} je velikost jedné položky.
+        \item \texttt{pocet} je počet položek, které chceme zapsat.
+        \item \texttt{soubor} je ukazatel na soubor.
+        \item Funkce vrací počet úspěšně zapsaných položek, tj. pokud vše proběhlo OK, vrací hodnotu \texttt{pocet}.
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad zápisu} 
+\begin{minted}[linenos=true]{c} 
+int cisla[] = {-1, 1, 9, 15, 16, 31};
+
+// otevreme soubor pro zapis binarnich dat
+FILE* soubor = fopen("soubor.dat", "wb");
+
+// zapiseme 6 polozek typu (velikosti) int,
+// ktera zacinaji na adrese "cisla" (=zacatek pole)
+fwrite(cisla, sizeof(int), 6, soubor);
+
+fclose(soubor);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Obsah souboru} 
+    \begin{itemizex}
+        \item Binární soubor nemá smysl otevírat v běžném textovém editoru.
+        \item Ale existují editory, které binární soubory zobrazí v hexa zápise:
+        \item Po zápisu čísel -1, 1, 9, 15, 16, 31 bychom tak mohli dostat:
+\begin{minted}[linenos=true]{bash} 
+ffff ffff 0100 0000 0900 0000 0f00 0000
+1000 0000 1f00 0000 
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad zápisu jedné proměnné} 
+\begin{minted}[linenos=true]{c} 
+double cislo = 3.14;
+FILE* soubor = fopen("soubor.dat", "wb");
+
+// Pozor, musime predat adresu. Identifikator pole je adresa
+// ale u bezne promenne musime adresu vynutit operatorem &
+// Pocet nastavime na 1, protoze ukladame 1 polozku.
+fwrite(&cislo, sizeof(double), 1, soubor);
+
+fclose(soubor);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Čtení binárních dat} 
+    \begin{itemize}
+        \item Funkce pro čtení dat: 
+\begin{minted}[linenos=true]{c} 
+size_t fread(void* kam, size_t rozmer, 
+                size_t pocet, FILE* soubor);
+\end{minted}
+        \item \texttt{kam} je adresa paměti, kam se mají data načíst.
+        \item \texttt{rozmer} udává velikost jedné přečtené položky.
+        \item \texttt{pocet} je počet přečtených jednotek.
+        \item \texttt{soubor} je ukazatel na soubor, ze kterého se čte.
+        \item Funkce vrací počet přečtených jednotek -- hodnotu \texttt{pocet}, pokud vše proběhlo správně. Pokud vrátí jinou hodnotu, narazili jsme na konec souboru nebo nastala chyba.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad čtení dat} 
+\begin{minted}[linenos=true]{c} 
+// Obsah souboru: -1, 1, 9, 15, 16, 31
+int nactena_cisla[6];
+
+// otevreme pro cteni v binarnim rezimu!
+FILE* soubor = fopen("soubor.dat", "rb");
+
+// Precteme 6 polozek typu int do pole nactena_cisla
+// nactena_cislaje ukazatel na zacatek pole
+fread(nactena_cisla, sizeof(int), 6, soubor);
+
+// Vytiskne se: -1, 31
+printf("%i, %i\n", cisla[0], cisla[5]);
+
+fclose(soubor);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad čtení jedné proměnné} 
+\begin{minted}[linenos=true]{c} 
+// V souboru je 3.14
+// Otevreme soubor pro cteni v binarnim rezimu
+FILE* soubor = fopen("soubor.dat", "rb");
+
+// Promenne, do ktere nacteme cislo
+double cislo;
+
+// Musime predat adresu, kam to nacteme
+// Nacteme jednu polozku o velikost double
+fread(&cislo, sizeof(double), 1, soubor);
+
+// Vypise se 3.14
+printf("%g\n", cislo);
+fclose(soubor);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Uložení/čtení více proměnných} 
+\begin{minted}[linenos=true]{c} 
+int cislo = 666, xcislo;
+char retezec[] = "ahoj", xretezec[5];
+// zapis do souboru
+fwrite(&cislo, sizeof(int), 1, soubor); // zapiseme int
+fwrite(retezec, sizeof(char), 5, soubor); // zapiseme retezec
+fclose(soubor);
+// soubor ma velikost 4 + 5 = 9 bajtu
+// obsah: <int><char><char><char><char><char>
+// zpetne precteme
+fread(&xcislo, sizeof(int), 1, soubor); // precteme int
+fread(xretezec, sizeof(char), 5, soubor); // precteme retezec
+fclose(soubor);
+printf("%i, %s\n", xcislo, xretezec);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Posun pozice v souboru} 
+    \begin{itemizex}
+        \item Pomocí funkce \texttt{fseek} můžeme hýbat s aktuálním pozicí v souboru.
+\begin{minted}[linenos=true]{c} 
+int fseek(FILE* soubor, long posun, int odkud);
+\end{minted}
+        \item \texttt{posun} počet bajtů (může být i záporné číslo) o kolik se má změnit aktuální pozice
+        \item \texttt{odkud} udává výchozí pozici. Můžeme použít konstanty:
+        \begin{itemize}
+            \item SEEK\_SET -- od začátku souboru 
+            \item SEEK\_CUR -- od aktuální pozice
+            \item SEEK\_END -- od konce souboru
+        \end{itemize}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad posunu pozice} 
+\begin{minted}[linenos=true]{c} 
+// Obsah souboru: -1, 1, 9, 15, 16, 31
+FILE* soubor = fopen("soubor.dat", "rb");
+int cislo;
+// Posuneme se o dva inty dopredu od zacatku
+fseek(soubor, 2 * sizeof(int), SEEK_SET);
+fread(&cislo, sizeof(int), 1, soubor);
+printf("%i\n", cislo); // 9
+
+// Posuneme se o jeden int dorpedu od aktualni pozice
+fseek(soubor, sizeof(int), SEEK_CUR);
+fread(&cislo, sizeof(int), 1, soubor);
+printf("%i\n", cislo); // 16
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Posun zpět} 
+\begin{minted}[linenos=true]{c} 
+// Obsah souboru: -1, 1, 9, 15, 16, 31
+FILE* soubor = fopen("soubor.dat", "rb");
+int cislo;
+// Vratime se zpet o jeden int
+fseek(soubor, -sizeof(int), SEEK_END);
+
+// precteme posledni int v souboru
+fread(&cislo, sizeof(int), 1, soubor);
+
+// vytiskne se 31
+printf("%i\n", cislo);
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Zjištění pozice} 
+    \begin{itemize}
+        \item Funkce \texttt{ftell} vrací aktuální pozici v souboru.
+\begin{minted}[linenos=true]{c} 
+long ftell(FILE* soubor);
+\end{minted}
+        \item Příklad:
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.dat", "rb");
+int cislo;
+// vytiskne 0, jsme na zacatku
+printf("%lu\n", ftell(soubor));
+fread(&cislo, sizeof(int), 1, soubor);
+// Vytiskne 4, posunuli jsme se o 1 int (pokud ma int 4 B)
+printf("%lu\n", ftell(soubor));
+fseek(soubor, -sizeof(int), SEEK_END);
+// Vytiskne 20
+printf("%lu\n", ftell(soubor));
+fclose(soubor);
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Standardní proudy} 
+    \begin{itemizex}
+        \item Funkce \texttt{printf} tiskne na tzv. standardní výstup. To není nic jiného, než ukazatel na soubor, tj. \texttt{FILE*}, který je definovaný v \texttt{stdio.h}:
+\begin{minted}[linenos=true]{c} 
+FILE* stdin;
+FILE* stdout;
+FILE* stderr;
+\end{minted}
+        \item Tyto zápisy jsou tak totožné:
+\begin{minted}[linenos=true]{c} 
+printf("%i, %g\n", 10, 5.47);
+fprintf(stdout, "%i, %g\n", 10, 5.47);
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

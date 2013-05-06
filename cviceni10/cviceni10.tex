@@ -1,0 +1,209 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 10: Piškvorky + dobré rady}
+\author{Lukáš Havrlant}
+\date{16. dubna 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Piškvorky} 
+    \begin{itemizex}
+        \item Na webu jsou ukázky. 
+        \item Jsou tam i pomocné funkce ke stažení (nemusíte je použít.)
+        \item Termín odevzdání: do konce zápočtového týdne.
+        \item Můžete to odevzdávat jako jeden soubor, ale \dots bude lepší, když to bude ve více souborech.
+    \end{itemizex}
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Hrací deska} 
+    \begin{itemizex}
+        \item Hrací deska má velikost $3\times3$
+        \item Nejjednodušeji realizujete jako dvourozměrné dynamické pole charů.
+        \item Používejte nějaké konstanty pro dva hráče + pro prázdné pole. Např. \texttt{\#define KRIZEK 'X'}
+        \item Pokud si vzpomenete, můžete použít i \texttt{enum}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Save \& load} 
+    \begin{itemizex}
+        \item Potřebujte funkci, která převede hrací desku na jeden řetězec. 
+        \item Tento řetězec pak uložíte do textového souboru.
+        \item Desku můžete textem reprezentovat pomocí devíti znaků: \texttt{XXO\_\_\_OXO}
+        \item Obdobně naopak: potřebujete funkci, která vezme řetězec \texttt{XXO\_\_\_OXO}, vytvoří novou desku a překopíruje znaky na správná místa na desce.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Drobnosti} 
+    \begin{itemizex}
+        \item Hra nesmí nikdy spadnout a nikdy se nesmí dostat do nekonzistentního stavu.
+        \item Kontrolujte vstupy. Příkaz \texttt{dobry den} není platný příkaz, stejně tak \texttt{t8} není platná souřadnice. 
+        \item Kontrolujte, zda můžete otevřít soubory pro zápis/čtení. 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Rada: používejte vlastní typy} 
+    \begin{itemizex}
+        \item Typický způsob, jak reprezentovat políčko je jeden znak: \texttt{'X', 'O', '\_'}
+        \item Nepoužívejte ale přímo typ \texttt{char}
+        \item Vytvořte si alias: \texttt{typedef char Hrac} nebo \texttt{typedef char** HraciDeska}
+        \item Pak můžete psát \texttt{Hrac na\_tahu = KRIZEK;}
+        \item Nebo \texttt{Hrac dalsi\_na\_tahu(Hrac na\_tahu) \{...\}}
+    \end{itemizex}
+\end{frame}
+
+\begin{frame}[t,fragile]\frametitle{Rada: rozdělejte program do funkcí} 
+    \begin{itemizex}
+        \item Nepokoušejte se vše nacpat do jedné jediné funkce, rozdělte program do více funkcí.
+        \item Zhruba platí, že čím víc funkcí, tím lépe (nedovádět do extrémů\dots)
+        \item Znovupoužitelnost (DRY -- don't repeat yourself)
+        \item Lépe se v tom orientujete
+        \item Nepotřebujte psát tolik komentářů
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce má mít jeden účel} 
+    \begin{itemizex}
+        \item Jedna funkce má dělat jednu konkrétní věc. 
+        \item A to je vše. 
+        \item Jak by to nemělo vypadat:
+\begin{minted}[linenos=true]{c} 
+if (/* sileny vyraz kontrolujici souradnice */) {
+    if (/* je pole obsazene? */) {
+        // tady provedeneme tah
+        hrac_na_tahu = /* prohodime hrac na tahu */
+    }
+}
+// + osetreni chybovych stavu
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak by to spíše mělo vypadat} 
+\begin{minted}[linenos=true]{c} 
+if (platne_souradnice(souradnice)) {
+    if (!obsazeno(souradnice)) {
+        tahni(souradnice, hraci_deska);
+        hrac_na_tahu = dalsi_hrac(hrac_na_tahu);
+    } 
+}
+// + osetreni chybovych stavu
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Testujte!} 
+    \begin{itemizex}
+        \item V C máme \texttt{assert} nebo použijeme nějakou externí knihovnu.
+        \item TDD = testy řízené programování -- extrémní verze testování: \textbf{nejdřív} píšeme testy a až \textbf{potom} píšeme kód.
+        \item Méně extrémní verze: napíšeme kód (funkci) a připíšeme k ní testy.
+        \item Testování pomáhá programátorovi během vývoje aplikace! 
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Výhody testování} 
+    \begin{itemizex}
+        \item Máte (relativní) jistotu, že když změníte kód v jedné funkci, že si nepomrvíte funkčnost jiné funkce.
+        \item Můžete snadno refactorovat -- přepisovat kód do lepší podoby. 
+        \item Klasický postup: napsat funkční kód, napsat testy, přepsat funkční kód, aby vypadal hezky. 
+        \item Bez testů se po přepisu můžete jen modlit, že jste nic nezkazili. 
+        \item (Jak můžete jít ve dvě ráno v klidu spát, když nevíte, zda jste poslední změnou v kódu nepokazili polovinu programu?!)
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Nevýhody testování} 
+    \begin{itemizex}
+        \item Je to zdlouhavé. 
+        \item Psát testy je otravné.
+        \item Pokud dojde k žádané změně programu, musí se přepsat související testy.
+        \item Což je zdlouhavé.
+        \item A otravné.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Komentáře} 
+    \begin{itemizex}
+        \item Komentáře slouží k dokumentaci kódu.
+        \item Nepoužíváme je nadbytečně, nemá smysl komentovat zřejmé věci:
+\begin{minted}[linenos=true]{c} 
+i++; // zvysime hodnotu i o +1
+// alokujeme misto pro promennou slovo
+slovo = (char*) malloc(sizeof(char) * 10);
+while (znak = slovo[i++]) {} // projdeme cyklem slovo
+slovo[i] = '\0'; // ukoncime slovo nulou
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Co má smysl komentovat} 
+    \begin{itemizex}
+        \item K čemu slouží daná funkce. 
+\begin{minted}[linenos=true]{c} 
+// obrati slovo, "srp" -> "prs"
+char* obrat(char* retezec) { ... }
+\end{minted}
+        \item Často existuje speciální syntaxe pro popis funkce, parametrů funkce a návratové hodnoty. 
+        \item Speciální případy, které nejsou ze samotného kódu zřejmé.
+        \item Často bývá lepší nepsat komentáře, ale mít v kódu správně pojmenované proměnné/funkce. 
+    \end{itemizex}
+\end{frame}
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

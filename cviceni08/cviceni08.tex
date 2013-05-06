@@ -49,7 +49,7 @@
         \item Všechny potřebné funkce jsou v knihovně \texttt{stdio.h}
         \item K otevření souboru slouží funkce \texttt{fopen}:
 \begin{minted}[linenos=true]{c} 
-FILE *fopen(const char* path, const char* mode);
+FILE* fopen(const char* cesta, const char* mod);
 \end{minted}
         \item Funkce vrací ukazatel na strukturu \texttt{FILE} -- ukazatel na \uv{datový proud}, anglicky \uv{stream}.
         \item Pokud otevření selže, funkce vrací \texttt{NULL}.
@@ -97,11 +97,28 @@ fopen("seznam.dat", "r+b");
 \end{frame}
 
 
+\begin{frame}[t,fragile]\frametitle{Co je to datový proud} 
+    \begin{itemize}
+        \item Datový proud je logické rozhraní nad (nejen) soubory. Např. standardní výstup (= tam kam vypisuje \texttt{printf}) je také datový proud. 
+        \item Praktické důsledky pro nás: při čtení textového souboru můžeme každý znak přečíst jen jednou.
+\begin{minted}[linenos=true]{c} 
+// otevreme nejaky soubor pro cteni, ziskame proud:
+"ahoj svete"
+// precteme 5 znaku, v proudu zustane:
+"svete"
+// precteme 2 znaky, v proudu zustane:
+"ete"
+\end{minted}
+        \item Nemáme k dispozici náhodný přístup přes \texttt{[]}
+    \end{itemize}
+\end{frame}
+
+
 \begin{frame}[t,fragile]\frametitle{Čtení z textového souboru} 
     \begin{itemizex}
-        \item Ke čtení jednoho znaku slouží funkce \texttt{getc}:
+        \item Ke čtení jednoho znaku slouží funkce \texttt{fgetc}:
 \begin{minted}[linenos=true]{c} 
-int getc(FILE* soubor);
+int fgetc(FILE* soubor);
 \end{minted}
         \item Předpokládejme, že \texttt{soubor.txt} obsahuje:
 \begin{minted}[linenos=true]{bash} 
@@ -111,9 +128,9 @@ druhy radek.
 
 \begin{minted}[linenos=true]{c} 
 FILE* soubor = fopen("soubor.txt", "r");
-printf("%c\n", getc(soubor)); // P
-printf("%c\n", getc(soubor)); // r
-printf("%c\n", getc(soubor)); // v
+printf("%c\n", fgetc(soubor)); // P
+printf("%c\n", fgetc(soubor)); // r
+printf("%c\n", fgetc(soubor)); // v
 \end{minted}
     \end{itemizex}
 \end{frame}
@@ -152,12 +169,13 @@ printf("%s\n", radek); // druh
 
 
 \begin{frame}[t,fragile]\frametitle{Formátované čtení} 
-    \begin{itemizex}
+    \begin{itemize}
         \item Funkce \texttt{fscanf}, obdoba funkce \texttt{scanf}, kterou známe. 
 \begin{minted}[linenos=true]{c} 
 int fscanf(FILE *soubor, const char* format, ...);
 \end{minted}
-        \item Pro soubor obsahující řádek \texttt{10 3.14!} bychom dostali:
+        \item Návratovou hodnotou je počet úspěšně načtených proměnných, tj. \texttt{fscanf(s, "\%i,\%i", \&a, \&b)} vrací při úspěchu 2.
+        \item Pro soubor obsahující řádek \uv{\texttt{10 3.14! Neprecte se.}} bychom dostali:
 \begin{minted}[linenos=true]{c} 
 int x;
 double des;
@@ -166,30 +184,58 @@ FILE* soubor = fopen("soubor.txt", "r");
 fscanf(soubor, "%i %lf%c", &x, &des, &ch);
 printf("%i, %g, %c\n", x, des, ch); // 10, 3.14, !
 \end{minted}
-    \end{itemizex}
+    \end{itemize}
 \end{frame}
 
 
 \begin{frame}[t,fragile]\frametitle{Jak poznat konec souboru} 
     \begin{itemizex}
-        \item Pokud jsme již narazili na konec souboru, vrací funkce \texttt{getc} a \texttt{fscanf} konstantu \texttt{EOF} (\uv{End of file}).
+        \item Pokud jsme již narazili na konec souboru, vrací funkce \texttt{fgetc} a \texttt{fscanf} konstantu \texttt{EOF} (\uv{End of file}).
         \item Funkce \texttt{fgets} vrací \texttt{NULL}.
 \begin{minted}[linenos=true]{c} 
 char znak;
 FILE* soubor = fopen("soubor.txt", "r");
-while((znak = getc(soubor)) != EOF) {
+while((znak = fgetc(soubor)) != EOF) {
     printf("%c\n", znak);
 }
 // program vypise kazdy znak souboru 
 // na samostatny radek a skonci
 \end{minted}
+        \item Toto řešení není dokonalé -- \texttt{fgetc} vrací \texttt{EOF} i při chybě.
     \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Jak poznat konec souboru: funkce \texttt{feof}} 
+    \begin{itemizex}
+        \item Funkce \texttt{feof} zjišťuje, jestli už jsme přečetli celý soubor. Pokud jsme ho přečetli celý, vrací 1, jinak 0. 
+\begin{minted}[linenos=true]{c} 
+int feof(FILE* soubor);
+\end{minted}
+        \item Pozor -- funkce vrací 1 jen v případě, kdy už jsme se pokusili přečíst znak mimo soubor. Pokud má soubor 10 znaků, my přečteme 10 znaků, funkce \texttt{feof} vrací 0.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Špatné použití funkce \texttt{feof}} 
+\begin{minted}[linenos=true]{c} 
+// Pro soubor s obsahem: "abcd"
+FILE* soubor = fopen("soubor.txt", "r");
+while(!feof(soubor)) {
+    printf("%c, ", fgetc(soubor));
+}
+// Vystup bude:
+// a, b, c, d, EOF, 
+\end{minted}
+\begin{itemizex}
+    \item Funkce \texttt{feof} vrátí 0 až po pokusu o přečtení znaku mimo soubor, tj. smyčka proběhne jednou navíc. 
+\end{itemizex}
 \end{frame}
 
 
 \begin{frame}[t,fragile]\frametitle{Navrácení znaku do proudu} 
     \begin{itemizey}
-        \item Častým požadavkem je: \uv{čti znaky, dokud nenarazíš na číslici}. Což ale znamená, že se zarazíme až ve chvíli, kdy nějakou číslici přečteme.
+        \item Častým požadavkem je něco jako: \uv{čti znaky, dokud nenarazíš na číslici}. Což ale znamená, že se zarazíme až ve chvíli, kdy nějakou číslici přečteme.
         \item Pokud čteme soubor s obsahem \texttt{abcdef123456}, zůstane nám ve zbytku proudu obsah \texttt{23456}.
         \item Funkce \texttt{ungetc} vrací znak do proudu. 
 \begin{minted}[linenos=true]{c} 
@@ -208,13 +254,13 @@ if (je_cislice(nacteny_znak)) {
         \item Používáme obdobné funkce jako při čtení.
         \item Funkce \texttt{puts} slouží k zápisu jednoho znaku.
 \begin{minted}[linenos=true]{c} 
-int putc(int znak, FILE* soubor);
+int fputc(int znak, FILE* soubor);
 \end{minted}
 
 \begin{minted}[linenos=true]{c} 
 FILE* soubor = fopen("soubor.txt", "w");
-putc('4', soubor);
-putc('2', soubor);
+fputc('4', soubor);
+fputc('2', soubor);
 \end{minted}
         \item Tímto přepíšeme obsah souboru \texttt{soubor.txt} na obsah \texttt{"42"}.
     \end{itemizex}
@@ -226,8 +272,8 @@ putc('2', soubor);
         \item Zapisovat můžeme i za konec souboru:
 \begin{minted}[linenos=true]{c} 
 FILE* soubor = fopen("soubor.txt", "a");
-putc('4', soubor);
-putc('2', soubor);
+fputc('4', soubor);
+fputc('2', soubor);
 \end{minted}
         \item Obsah souboru by se změnil takto:
 \begin{minted}[linenos=true]{bash} 
@@ -318,31 +364,72 @@ fclose(soubor);
         \item Tohle je noční můra a zlý sen dohromady. 
         \item Jakákoliv práce s diskem může selhat. Soubor nemusí existovat, program nemusí mít práva daný soubor otevřít, disk může být plný\dots
         \item Po každém volání některé z funkcí bychom tak měli otestovat, zda vše proběhlo v pořádku. 
+        \item \uv{Polovina kódu v C je odchytávání a ošetřevání chybových stavů programu.} ~neznámý programátor
     \end{itemizex}
 \end{frame}
 
 
 \begin{frame}[t,fragile]\frametitle{Pokud dojde k chybě} 
     \begin{itemizex}
-        \item Funkce \texttt{putc}, \texttt{fputs}, \texttt{getc}, \texttt{fscanf}, \texttt{fclose} a \texttt{ungetc} vrací při chybě \texttt{EOF}.
+        \item Funkce \texttt{fputc}, \texttt{fputs}, \texttt{fgetc}, \texttt{fscanf}, \texttt{fclose} a \texttt{ungetc} vrací při chybě \texttt{EOF}.
         \item Funkce \texttt{fgets}, \texttt{fopen} vrací \texttt{NULL}.
-        \item Takže kód by měl vypadat nějak takto: (na dalším slajdu)
+        \item Jenže pokud čtecí funkce narazí na konec souboru, vrací funkce stejnou hodnotu :-(
     \end{itemizex}
 \end{frame}
 
 
-\begin{frame}[t,fragile]\frametitle{Kód s ošetřením chyb} 
+\begin{frame}[t,fragile]\frametitle{Kód s ošetřením chyb při zápisu} 
 \begin{minted}[linenos=true]{c} 
 FILE* soubor = fopen("soubor.txt", "r");
-if (soubor != NULL) {
-    if (putc('!', soubor) == EOF) {
-        // osetreni chyby
+if (soubor != NULL) { 
+    if (fputc('!', soubor) == EOF) {
+        // Nepodarilo se zapsat znak
     }
     if (fclose(soubor) == EOF) {
-        // osetreni chyby
+        // nepodarilo se uzavrit soubor
     }
 } else {
-    // osetreni chyby
+    // nepodarilo se otevrit soubor
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Kód s ošetřením chyby při čtení} 
+\begin{minted}[linenos=true]{c} 
+int znak;
+FILE* soubor = fopen("soubor.txt", "r");
+if (soubor != NULL) {
+    znak = fgetc(soubor);
+    if (znak == EOF){
+        if (feof(soubor))
+            // OK, jsme na konci souboru
+        else 
+            // Hmm, nepodarilo se precist znak
+    } else {
+        printf("Nacteny znak: %c\n", znak);
+    }
+} else {
+    // nepodarilo se otevrit soubor
+}
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Přečetli jsme celý soubor?} 
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "r");
+char* buffer = (char*) malloc(30 * sizeof(char));
+// nacitej radky, dokud fgets nevrati NULL.
+// pak jsme bud precetli cely soubor, nebo nastala chyba
+while(fgets(buffer, 30, soubor) != NULL) {
+    printf("%s", buffer);
+}
+
+if (feof(soubor)) {
+    printf("Konec souboru.\n");
+} else {
+    printf("Nastala chyba.\n");
 }
 \end{minted}
 \end{frame}
@@ -377,6 +464,34 @@ if (soubor != NULL) {
 // Chyba: No such file or directory
 // ID chyby: 2
 \end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Ošetření chyb pomocí \texttt{errno}} 
+    \begin{itemizex}
+        \item Proměnnou \texttt{errno} můžeme použít k ošetření chyb.
+        \item Pokud chyba nenastala, má proměnná \texttt{errno} hodnotu 0. Jinak obsahuje číslo chyby. 
+        \item Ale musíme testovat hned po provedení funkce! Aby to nepřepsala zase jiná funkce.
+\begin{minted}[linenos=true]{c} 
+FILE* soubor = fopen("soubor.txt", "r");
+if (errno) {
+    printf("Cislo chyby: %i\n", errno);
+} else {
+    // zpracovani souboru...
+}
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Relativní cesta k souboru} 
+ \begin{itemizex}
+     \item Absolutní cesta: \texttt{/cesta/ke/slozce} na unixu, \texttt{C:\textbackslash cesta\textbackslash ke\textbackslash slozce} na Windows
+     \item Relativní cesta: např. zmíněné \texttt{fopen("soubor.txt", "r")}.
+     \item Cesta je vždy relativní vůči umístění, ze kterého program spouštíte, ne vůči souboru, ve kterém je program uložený.
+     \item Tj. pokud otevřu příkazový řádek ve složce \texttt{C:\textbackslash ZP2\textbackslash} a spustím v něm program \texttt{CV8\textbackslash nacti\_soubor.exe}, bude se hledat ve složce \texttt{C:\textbackslash ZP2\textbackslash}. 
+     \item Pokud nechcete mít problémy, používejte absolutní adresy. 
+ \end{itemizex}
 \end{frame}
 
 

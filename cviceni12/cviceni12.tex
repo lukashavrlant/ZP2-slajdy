@@ -1,0 +1,212 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 12: Práce s časem}
+\author{Lukáš Havrlant}
+\date{30. dubna 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+
+\begin{frame}[t,fragile]\frametitle{Knihovna \texttt{time.h}} 
+  \begin{itemizex}
+    \item V knihovně \texttt{time.h} nalezneme užitečné funkce/struktury pro práci s časem.
+    \item V knihovně jsou dva základní typy: \texttt{time\_t} a \texttt{struct tm}.
+    \item \texttt{time\_t} je typ pro uložení kalendářního času -- typicky celé číslo, obsahující počet sekund od 1. 1. 1970. 
+    \item \texttt{struct tm} je struktura pro uložení data a času. 
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Struktura \texttt{tm}} 
+\begin{minted}[linenos=true]{c} 
+int tm_sec;    /* seconds after the minute (0 to 61) */
+int tm_min;    /* minutes after the hour (0 to 59) */
+int tm_hour;   /* hours since midnight (0 to 23) */
+int tm_mday;   /* day of the month (1 to 31) */
+int tm_mon;    /* months since January (0 to 11) */
+int tm_year;   /* years since 1900 */
+int tm_wday;   /* days since Sunday (0 to 6 Sunday=0) */
+int tm_yday;   /* days since January 1 (0 to 365) */
+int tm_isdst;  /* indikator letniho casu */
+// kladna hodnota tm_isdst => je letni cas
+// nulova => neni letni cas
+// zaporna => nelze zjistit
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{time}} 
+  \begin{itemizex}
+    \item \texttt{time\_t time(time\_t *timer);}
+    \item Vrací počet sekund od 1. 1. 1970. 
+    \item Pokud je \texttt{timer} různý od \texttt{NULL}, pak tam uloží stejnou hodnotu jako vrátí.
+\begin{minted}[linenos=true]{c} 
+time_t cas2;
+time_t cas = time(NULL);
+time(&cas2);
+printf("cas: %ld,cas: %ld\n", (long)cas, (long)cas2);
+// K casu muzeme pricist nejakou hodnotu. 
+cas += 60; // + 60 sekund = 1 minuta
+\end{minted}
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{localtime}} 
+  \begin{itemizex}
+    \item \texttt{struct tm *localtime(const time\_t *timer);}
+    \item Funkce bere \texttt{time\_t} hodnotu (počet sekund od 1. 1. 1970) a rozseká ji do \texttt{tm} struktury. 
+    \item Bere v potaz lokální nastavení (časová zóna, letní časy, \dots)
+\begin{minted}[linenos=true]{c} 
+time_t cas = time(NULL);
+struct tm *datum = localtime(&cas);
+printf("%i:%i\n", datum->tm_hour, datum->tm_min);
+// Mozny vystup: 23:38
+\end{minted}
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{gmtime}} 
+  \begin{itemizex}
+    \item \texttt{struct tm *gmtime(const time\_t *timer);}
+    \item Chování stejné jako u funkce \texttt{localtime}
+    \item \dots akorát všechen čas počítá podle Greenwichského středního času (UTC).
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{asctime}} 
+  \begin{itemizex}
+    \item \texttt{char *asctime(const struct tm *timeptr);}
+    \item Vrací textovou reprezentaci data ve formátu: \texttt{DDD MMM dd hh:mm:ss YYYY}
+\begin{minted}[linenos=true]{c} 
+DDD  Day of the week (Sun,Mon,Tue,Wed,Thu,Fri,Sat)
+MMM  Month of the year (Jan,Feb,Mar,...,Oct,Nov,Dec)
+dd   Day of the month (1,...,31)
+hh   Hour (0,...,23)
+mm   Minute (0,...,59)
+ss   Second (0,...,59)
+YYYY   Year
+\end{minted}
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: funkce \texttt{asctime}}
+\begin{minted}[linenos=true]{c} 
+time_t cas = time(NULL);
+struct tm *datum = localtime(&cas);
+printf("%s\n", asctime(datum));
+// Mozny vystup: Sun Apr 28 23:58:38 2013
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{mktime}} 
+  \begin{itemizex}
+    \item \texttt{time\_t mktime(struct tm *timeptr);}
+    \item Funkce bere na vstupu strukturu \texttt{tm} a převede ji na počet sekund od 1. 1. 1970. 
+    \item Hodnoty \texttt{tm\_wday} a \texttt{tm\_yday} jsou ignorovány a pokud jsou nastaveny špatně, tak jsou opraveny. 
+  \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: \texttt{mktime}} 
+\begin{minted}[linenos=true]{c} 
+struct tm datum; // ulozime tam: 1. 1. 2001
+datum.tm_year=2001-1900;
+datum.tm_mon=0;
+datum.tm_mday=1;
+datum.tm_sec=0;
+datum.tm_min=0;
+datum.tm_hour=0;
+datum.tm_isdst=-1;
+time_t t = mktime(&datum);
+printf("sekundy: %ld\n", (long)t);
+printf("w: %i, y:%i\n", datum.tm_wday, datum.tm_yday);
+// sekundy: 978303600
+// w: 1, y:0  
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Funkce \texttt{strftime}} 
+  \begin{itemizey}
+    \item \texttt{size\_t strftime(char *str, size\_t maxsize, const char *format, const struct tm *timeptr);}
+    \item Slouží k formátování data a času přesně tak, jak chceme. 
+    \item \texttt{str} je ukazatel na kus paměti, kam se řetězec uloží. Musí být alokovaný.
+    \item Velikost \texttt{str}, tj. maximální počet znaků, který může funkce \texttt{strftime} do pole \texttt{*str} uložit (včetně nuly).
+    \item \texttt{format} je formátovací řetězec.
+    \item \texttt{timeptr} je sktuktura, kterou chceme převést na řetězec.
+  \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: funkce \texttt{strftime}} 
+\begin{minted}[linenos=true]{c} 
+time_t cas = time(NULL);
+struct tm *timeptr = localtime(&cas);
+char textovy_cas[256];
+
+// %d - den v mesici (1-31), %m - mesic (1-12), %Y - rok
+strftime(textovy_cas, 256, "%d. %m. %Y", timeptr);
+// Do textovy_cas se ulozil retezec reprezentujici datum
+printf("%s\n", textovy_cas); // 29. 04. 2013
+
+// %H hodina (1-23), %M minuta (0-59), %S sekunda (0-61)
+strftime(textovy_cas, 256, "%H:%M:%S", timeptr);
+printf("%s\n", textovy_cas); // 00:22:12
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}

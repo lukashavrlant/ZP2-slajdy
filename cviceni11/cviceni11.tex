@@ -1,0 +1,299 @@
+\documentclass{beamer}
+\usetheme[pageofpages=z,
+          bullet=circle,
+          titleline=true,
+          alternativetitlepage=true,
+          titlepagelogo=uplogo,
+          ]{UVT}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{czech}
+\usepackage{minted}
+% \usepackage{url}
+
+
+\newenvironment{itemizex}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{8pt}%
+    \setlength{\parskip}{8pt}}%
+  {\end{itemize}}
+
+\newenvironment{enumeratex}%
+  {\large \begin{enumerate}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{enumerate}}
+
+\newenvironment{itemizey}%
+  {\large \begin{itemize}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parskip}{6pt}}%
+  {\end{itemize}}
+
+
+\title{Základy programování 2 (KMI/ZP2 a KMI/UP2)}
+\subtitle{Cvičení 11: Bitové operátory a bitová pole}
+\author{Lukáš Havrlant}
+\date{23. dubna 2013}
+\institute{Univerzita Palackého}
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Binární soustava} 
+    \begin{itemizex}
+        \item Číslo v desítkové soustavě můžeme zapsat v binární soustavě:
+\begin{eqnarray*}
+157_{10} &=& 10011101_2\\
+20_{10} &=& 10100_2
+\end{eqnarray*}
+        \item Proč? Protože
+$$
+\underline{\textbf{0}}\cdot 2^0 + \underline{\textbf{0}}\cdot 2^1 + \underline{\textbf{1}}\cdot 2^2 + \underline{\textbf{0}}\cdot 2^3 + \underline{\textbf{1}}\cdot 2^4 = 4 + 16 = 20
+$$
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Logické operátory} 
+    \begin{itemizex}
+        \item Z logiky známe logické spojky/operátory \uv{a zároveň} a \uv{nebo}. 
+\begin{eqnarray*}
+\mbox{nebo}(x, y) &=&  \max(x, y)\\
+\mbox{a zároveň}(x, y) &=&  \min(x, y)\qquad (= x \cdot y)
+\end{eqnarray*}
+        \item Za $x$ a $y$ dosazujeme 1 (pravda) nebo 0 (nepravda).
+        \item Tedy \texttt{nebo(1, 0) = 1}, ale \texttt{a\_zároveň(1, 0) = 0}.
+    \end{itemizex}
+\end{frame}
+
+\begin{frame}[t,fragile]\frametitle{Bitový vektor} 
+    \begin{itemizex}
+        \item Logické operátory můžeme zobecnit tak, aby pracovaly s bitovým vektorem.
+        \item Bitový vektor = posloupnost nul a jedniček.
+\begin{verbatim}
+          100011                       100011
+a zároveň 100110                  nebo 100110
+          ------                       ------
+          100010                       100111
+\end{verbatim}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Číslo jako bitový vektor} 
+    \begin{itemize}
+        \item Číslo (integer) v C můžeme vidět jako bitový vektor.
+\begin{eqnarray*}
+20_{10} &=& 10100_2\\
+17_{10} &=& 10001_2
+\end{eqnarray*}
+        \item Tedy můžeme zapsat \uv{\texttt{20 a zároveň 17}}. 
+        \item V C k tomu slouží operátor \texttt{\&} (a zároveň) a \texttt{|} (nebo).
+\begin{minted}[linenos=true]{c} 
+int x = 20 & 17; // x = 16
+\end{minted}
+\begin{verbatim}
+  10100
+a 10001
+-------
+  10000
+\end{verbatim}
+        \item Přitom platí: $10000_2=16_{10}$.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Další bitové operátory} 
+\begin{minted}[linenos=true]{c} 
+x = 20 | 17; // x = 21
+x = 20 ^ 17; // x = 5
+// vsechny bitove operatory pracuji jen s celymi cisly
+\end{minted}
+
+\begin{verbatim}
+     10100                        10100
+nebo 10001                    XOR 10001
+----------                        -----
+     10101                        00101
+\end{verbatim}
+\begin{eqnarray*}
+10101_2 &=& 21_{10}\\
+00101_2 &=& 5_{10}
+\end{eqnarray*}
+    Stříška \texttt{\^} je bitový operátor nonekvivalence/XOR. Platí, že \texttt{xor(x,y) = 1} právě tehdy, když $x \ne y$ (\uv{ostré nebo}).
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: Chmod} 
+    \begin{itemizex}
+        \item Příkaz \texttt{chmod} slouží ke změně přístupových práv souboru. 
+        \item Můžeme nastavit tři různé oprávnění: čtení, zápis, spuštění. 
+        \item Realizováno jako bitový vektor o délce tři: čtení-zápis-spuštění. 
+        \item Vektor \texttt{011} tak značí: nemůžeme číst, můžeme zapisovat a spouštět.
+        \item Typicky nastavujeme pomocí celých čísel 0--7. $011_2=3_{10}$.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: převod na velká/malá písmena} 
+    \begin{itemizex}
+        \item Platí že hodnota \uv{a} minus \uv{A} je rovna 32 atd. Přitom $32_{10}=100000_2$ $\rightarrow$ písmena se liší v jediném bitu.
+\begin{verbatim}
+A = 65 = 1000001          S = 83  = 1010011
+a = 97 = 1100001          s = 115 = 1110011
+\end{verbatim}
+\begin{minted}[linenos=true]{c} 
+printf("%c\n", 'A' | 32); // Vytiskne se: "a"
+printf("%c\n", 'a' & 95); // Vytiskne se: "A"
+\end{minted}
+    \item V prvním případě jsme nastavili bit na 1, ve druhém na 0.
+\begin{verbatim}
+     1000001                  1100001
+nebo 0100000                a 1011111
+     -------                  -------
+     1100001                  1000001
+\end{verbatim}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Příklad: množiny} 
+    \begin{itemizey}
+        \item Pomocí bitových operátorů lze reprezentovat množinu.
+        \item Mějme množinu čísel od 0 do 7 (univerzum).
+        \item Nějakou podmnožinu bychom mohli reprezentovat jako bitový vektor. 1 = obsahuje prvek na dané pozici, 0 = neobsahuje. 
+$$
+A=\{1,2,7\}, B = \{5,6,7\}, C=\{0,1,2,3,4,5,6,7\}, D = \emptyset
+$$
+\begin{eqnarray*}
+A &=& 01100001\\
+B &=& 00000111\\
+C &=& 11111111\\
+D &=& 00000000
+\end{eqnarray*}
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Výhody bitové reprezentace} 
+    \begin{itemizex}
+        \item Můžeme implementovat klasické množinové operace pomocí bitových operátorů.
+        \item A to pak bude sakramentsky rychlé.
+        \item Např. průnik můžeme implementovat jen pomocí operátoru \texttt{\&}. 
+$$
+A \cap B = \{1,2,7\} \cap \{5,6,7\} = \{7\}
+$$
+
+\begin{verbatim}
+  01100001
+a 00000111
+  --------
+  00000001
+\end{verbatim}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Množina jako čísla} 
+    \begin{itemizex}
+        \item Jsme tak schopni reprezentovat množinu pomocí čísel:
+\begin{eqnarray*}
+A = 01100001_2 &=&  97_{10}\\
+B = 00000111_2 &=& 7_{10}
+\end{eqnarray*}
+        \item V C tak můžeme napsat:
+\begin{minted}[linenos=true]{c} 
+char A = 97, B = 7;
+char prunik = 97 & 7; // prunik = 1
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Množina jako pole čísel} 
+    \begin{itemizey}
+        \item Pokud pro množinu použijeme typ \texttt{int}, jsme omezeni jeho velikostí.
+        \item Pokud má \texttt{int} 4 bajty, můžeme ho použít pro uložení max 32prvkové množiny. 
+        \item Řešení: použít pole intů/charů. 
+\begin{minted}[linenos=true]{c} 
+ unsigned char mnozina[] = {27, 61};
+ \end{minted} 
+        \item Protože $27_{10}=00011011_2, 61_{10}= 00111101_2$, tak tím získáme množinu \texttt{0001101100111101}.
+        \item Průnik takové množiny bychom museli počítat po složkách: \texttt{mnA[0] \& mnB[0]; mnA[1] \& mnB[1];} atd. 
+    \end{itemizey}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Bitové posuny} 
+    \begin{itemize}
+        \item \texttt{>>} je bitový posun vpravo, \texttt{<<} je posun vlevo. 
+        \item Příklad: \texttt{00001011 << 1} se bude rovnat \texttt{00010110}.
+        \item Všechny bity posuneme a \uv{díry} zaplníme nulami. Takže \texttt{1111 >> 3 = 0001}
+        \item Pro představu -- v desítkové soustavě by platilo: \texttt{0123 << 1 = 1230}, což je totéž jako $123 \cdot 10$.
+        \item \texttt{<< 1} je totéž jako násobení dvěma. \texttt{<< x} je pak totéž jako násobení $2^x$. \texttt{>> x} je naopak dělení $2^x$.
+\begin{minted}[linenos=true]{c} 
+printf("%i\n", 15 << 1); // 30
+printf("%i\n", 5 << 3); // 40
+printf("%i\n", 32 >> 2); // 8
+\end{minted}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Negace} 
+    \begin{itemizex}
+        \item Tilda \texttt{\~} je operátor negace. \texttt{\~\, 10001110 = 01110001}
+        \begin{minted}[linenos=true]{c} 
+printf("%i\n", ~0); // Vypise: -1
+        \end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Bitové pole} 
+    \begin{itemizex}
+        \item Bitové pole je podobné struktuře, akorát místo typů specifikujeme počet bitů. 
+\begin{minted}[linenos=true]{c} 
+typedef struct {
+   unsigned den : 5;
+   unsigned mesic : 4;
+   unsigned rok : 7;
+} DATUM;
+\end{minted}
+        \item Člen \texttt{den} má velikost 5 bitů, takže do něj můžeme uložit číslo v rozmezí $0$--$(2^5-1)$, tedy $0-31$.
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]\frametitle{Bitové pole: pokračování} 
+    \begin{itemizex}
+        \item Celkový součet bitů nesmí přesáhnout hodnotu \texttt{sizeof(int)}.
+        \item Položky můžou být buď celé znaménkové (\texttt{signed}), nebo celé neznaménkové (\texttt{unsigned}).
+        \item Jinak se s tím pracuje stejně jako se strukturou:
+\begin{minted}[linenos=true]{c} 
+DATUM dnes = {23, 4, 2008 - 1980};
+DATUM zitra = dnes;
+zitra.den++;
+dnes.mesic = 6;
+dnes.rok = 2009 - 1980;
+\end{minted}
+    \end{itemizex}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Úlohy}
+\begin{center}
+\vskip 1cm
+{\Large Seznam úloh je na \url{http://KMIzp2.jdem.cz/}}
+\vskip 2cm
+\url{http://tux.inf.upol.cz/~havrlant/}
+\end{center}
+\end{frame}
+
+
+\end{document}
